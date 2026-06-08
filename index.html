@@ -1,0 +1,2652 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Allinone Compiler — Write, Test & Explore Code</title>
+<style>
+  /* =============================================
+     FONTS & RESET
+  ============================================= */
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  /* =============================================
+     CSS VARIABLES — DARK THEME (DEFAULT)
+  ============================================= */
+  :root {
+    --bg-base: #0a0c10;
+    --bg-surface: #10141c;
+    --bg-elevated: #171c28;
+    --bg-panel: #1d2330;
+    --bg-card: #161b26;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(99,202,183,0.3);
+
+    --text-primary: #e8edf5;
+    --text-secondary: #8b94a8;
+    --text-muted: #545e73;
+
+    --accent: #63cab7;
+    --accent-glow: rgba(99,202,183,0.18);
+    --accent2: #f07c5a;
+    --accent3: #8b7cf6;
+    --accent4: #f5c842;
+
+    --green: #4ecb8a;
+    --red: #f06b6b;
+    --yellow: #f5c842;
+    --blue: #5fa8f5;
+
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+    --shadow-lg: 0 24px 64px rgba(0,0,0,0.5);
+    --shadow-accent: 0 0 40px rgba(99,202,183,0.12);
+
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-code: 'Space Mono', monospace;
+
+    --header-h: 64px;
+    --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  [data-theme="light"] {
+    --bg-base: #f0f2f7;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f7f9fc;
+    --bg-panel: #edf0f7;
+    --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-accent: rgba(99,202,183,0.4);
+
+    --text-primary: #0f1420;
+    --text-secondary: #4a5368;
+    --text-muted: #8b94a8;
+
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.1);
+    --shadow-lg: 0 24px 64px rgba(0,0,0,0.12);
+    --shadow-accent: 0 0 40px rgba(99,202,183,0.1);
+  }
+
+  /* =============================================
+     BASE
+  ============================================= */
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  ::selection { background: var(--accent); color: #000; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  button { cursor: pointer; font-family: var(--font-body); }
+
+  /* =============================================
+     NOISE TEXTURE OVERLAY
+  ============================================= */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  /* =============================================
+     SCROLLBAR
+  ============================================= */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* =============================================
+     HEADER
+  ============================================= */
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    background: rgba(10,12,16,0.85);
+    backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+
+  [data-theme="light"] header {
+    background: rgba(240,242,247,0.88);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 18px;
+    color: var(--text-primary);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+  .logo:hover { text-decoration: none; }
+  .logo svg { flex-shrink: 0; }
+  .logo-text span { color: var(--accent); }
+
+  nav { display: flex; align-items: center; gap: 4px; }
+  nav a {
+    color: var(--text-secondary);
+    font-size: 14px; font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition), background var(--transition);
+  }
+  nav a:hover { color: var(--text-primary); background: var(--bg-elevated); text-decoration: none; }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn-theme {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition);
+  }
+  .btn-theme:hover { color: var(--accent); border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 14px;
+    transition: all var(--transition);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .btn-primary:hover {
+    background: #7dd9c8;
+    transform: translateY(-1px);
+    box-shadow: 0 0 32px rgba(99,202,183,0.35);
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    background: none; border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 6px 8px;
+    align-items: center; justify-content: center;
+  }
+
+  /* =============================================
+     HERO
+  ============================================= */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: calc(var(--header-h) + 60px) 32px 80px;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    overflow: hidden;
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(99,202,183,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,202,183,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
+  }
+  .hero-glow-1 {
+    position: absolute; top: 10%; left: -10%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(99,202,183,0.12) 0%, transparent 70%);
+    filter: blur(40px);
+    animation: floatGlow 8s ease-in-out infinite;
+  }
+  .hero-glow-2 {
+    position: absolute; bottom: 0%; right: -5%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(240,124,90,0.1) 0%, transparent 70%);
+    filter: blur(40px);
+    animation: floatGlow 10s ease-in-out infinite reverse;
+  }
+  .hero-glow-3 {
+    position: absolute; top: 40%; left: 45%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(139,124,246,0.08) 0%, transparent 70%);
+    filter: blur(60px);
+    animation: floatGlow 12s ease-in-out infinite 2s;
+  }
+
+  @keyframes floatGlow {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(20px, -20px); }
+    66% { transform: translate(-10px, 15px); }
+  }
+
+  .hero-content {
+    max-width: 1200px; margin: 0 auto; width: 100%;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    position: relative; z-index: 1;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-accent);
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 12px 4px 6px;
+    border-radius: 99px;
+    margin-bottom: 24px;
+    animation: fadeSlideUp 0.6s ease both;
+  }
+  .hero-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+  }
+
+  .hero-headline {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 68px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+    animation: fadeSlideUp 0.7s ease 0.1s both;
+  }
+  .hero-headline .line2 { color: var(--accent); }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 36px;
+    font-weight: 300;
+    animation: fadeSlideUp 0.7s ease 0.2s both;
+  }
+
+  .hero-ctas {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    animation: fadeSlideUp 0.7s ease 0.3s both;
+    margin-bottom: 44px;
+  }
+
+  .btn-hero-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #000;
+    font-weight: 700; font-size: 15px;
+    padding: 12px 28px; border-radius: var(--radius-md);
+    border: none;
+    transition: all var(--transition);
+    box-shadow: 0 0 40px var(--accent-glow);
+  }
+  .btn-hero-primary:hover {
+    background: #7dd9c8; transform: translateY(-2px);
+    box-shadow: 0 0 60px rgba(99,202,183,0.4);
+    text-decoration: none; color: #000;
+  }
+
+  .btn-hero-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--bg-elevated); color: var(--text-primary);
+    font-weight: 600; font-size: 15px;
+    padding: 12px 24px; border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+  }
+  .btn-hero-secondary:hover {
+    border-color: var(--accent); color: var(--accent); transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .hero-stats {
+    display: flex; gap: 32px;
+    animation: fadeSlideUp 0.7s ease 0.4s both;
+  }
+  .hero-stat-item {}
+  .hero-stat-num {
+    font-family: var(--font-display);
+    font-size: 26px; font-weight: 800;
+    color: var(--text-primary);
+  }
+  .hero-stat-num span { color: var(--accent); }
+  .hero-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .hero-visual {
+    position: relative;
+    animation: fadeSlideUp 0.7s ease 0.2s both;
+  }
+
+  .hero-editor-mock {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), 0 0 80px rgba(99,202,183,0.07);
+    position: relative;
+  }
+
+  .mock-titlebar {
+    background: var(--bg-elevated);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mock-dot.red { background: #f06b6b; }
+  .mock-dot.yellow { background: #f5c842; }
+  .mock-dot.green { background: #4ecb8a; }
+  .mock-title {
+    flex: 1; text-align: center;
+    font-size: 12px; color: var(--text-muted);
+    font-family: var(--font-code);
+  }
+  .mock-lang-badge {
+    font-size: 10px; font-weight: 700;
+    background: var(--accent-glow);
+    color: var(--accent);
+    padding: 2px 8px; border-radius: 99px;
+    border: 1px solid var(--border-accent);
+  }
+
+  .mock-code {
+    padding: 20px;
+    font-family: var(--font-code);
+    font-size: 13px; line-height: 1.7;
+  }
+  .mock-code .ln { color: var(--text-muted); margin-right: 16px; user-select: none; }
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: var(--text-muted); font-style: italic; }
+  .num { color: #f78c6c; }
+
+  .mock-output {
+    background: rgba(0,0,0,0.25);
+    border-top: 1px solid var(--border);
+    padding: 12px 20px;
+  }
+  .mock-output-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .mock-output-text {
+    font-family: var(--font-code);
+    font-size: 13px; color: var(--green);
+  }
+
+  .hero-float-badge {
+    position: absolute;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    font-size: 12px; font-weight: 600;
+    box-shadow: var(--shadow-md);
+    white-space: nowrap;
+    animation: float 6s ease-in-out infinite;
+  }
+  .hero-float-badge.badge-1 { top: -16px; right: 20px; color: var(--green); animation-delay: 0s; }
+  .hero-float-badge.badge-2 { bottom: 60px; left: -20px; color: var(--accent); animation-delay: 2s; }
+  .hero-float-badge.badge-3 { top: 50%; right: -24px; color: var(--accent2); animation-delay: 4s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* =============================================
+     SECTION SHARED
+  ============================================= */
+  .section { padding: 96px 32px; }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+
+  .section-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--accent); font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 16px;
+  }
+  .section-label::before {
+    content: '';
+    width: 16px; height: 2px; background: var(--accent);
+    border-radius: 99px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800; letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 560px; line-height: 1.7;
+  }
+
+  .section-header { margin-bottom: 56px; }
+
+  /* =============================================
+     REVEAL ANIMATIONS
+  ============================================= */
+  .reveal {
+    opacity: 0; transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+
+  /* =============================================
+     LANGUAGES SECTION
+  ============================================= */
+  .languages-section { background: var(--bg-surface); }
+
+  .lang-tabs {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 40px;
+  }
+  .lang-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+    cursor: pointer;
+  }
+  .lang-tab:hover { color: var(--text-primary); border-color: var(--border-accent); }
+  .lang-tab.active {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .lang-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .lang-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .lang-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity var(--transition);
+    border-radius: var(--radius-lg);
+  }
+  .lang-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-accent);
+    box-shadow: var(--shadow-md), var(--shadow-accent);
+  }
+  .lang-card:hover::before { opacity: 1; }
+
+  .lang-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+
+  .lang-name {
+    font-family: var(--font-display);
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .lang-desc {
+    font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .lang-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .lang-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 99px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .badge-hot { background: rgba(240,124,90,0.15); color: var(--accent2); border: 1px solid rgba(240,124,90,0.3); }
+  .badge-popular { background: rgba(99,202,183,0.1); color: var(--accent); border: 1px solid rgba(99,202,183,0.25); }
+  .badge-trending { background: rgba(139,124,246,0.12); color: var(--accent3); border: 1px solid rgba(139,124,246,0.25); }
+  .badge-classic { background: rgba(245,200,66,0.1); color: var(--yellow); border: 1px solid rgba(245,200,66,0.25); }
+
+  .lang-use { font-size: 11px; color: var(--text-muted); }
+
+  .btn-open-sample {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    transition: all var(--transition);
+  }
+  .btn-open-sample:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* =============================================
+     COMPILER WORKSPACE
+  ============================================= */
+  .compiler-section { padding: 80px 32px; background: var(--bg-base); }
+  .compiler-section .section-inner { max-width: 1400px; }
+
+  .compiler-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 12px 20px;
+    border-bottom: none;
+  }
+
+  .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .lang-selector {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    cursor: pointer;
+    position: relative;
+    transition: border-color var(--transition);
+  }
+  .lang-selector:hover { border-color: var(--border-accent); }
+  .lang-selector-icon { font-size: 18px; }
+  .lang-selector-text { font-size: 14px; font-weight: 600; }
+  .lang-selector-chevron { color: var(--text-muted); margin-left: 4px; }
+
+  .lang-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    z-index: 100;
+    min-width: 180px;
+    display: none;
+    box-shadow: var(--shadow-md);
+  }
+  .lang-dropdown.open { display: block; }
+  .lang-dropdown-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background var(--transition);
+  }
+  .lang-dropdown-item:hover { background: var(--bg-panel); }
+  .lang-dropdown-item.selected { background: var(--accent-glow); color: var(--accent); }
+
+  .toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+  .btn-toolbar {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px; font-weight: 500;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition);
+  }
+  .btn-toolbar:hover { color: var(--text-primary); border-color: var(--border-accent); }
+
+  .btn-run {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #000;
+    border: none; font-weight: 700; font-size: 14px;
+    padding: 8px 22px; border-radius: var(--radius-sm);
+    transition: all var(--transition);
+    box-shadow: 0 0 24px var(--accent-glow);
+    position: relative; overflow: hidden;
+  }
+  .btn-run::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+  .btn-run:hover::before { transform: translateX(100%); }
+  .btn-run:hover { background: #7dd9c8; box-shadow: 0 0 40px rgba(99,202,183,0.4); }
+  .btn-run:disabled { background: var(--text-muted); cursor: not-allowed; box-shadow: none; }
+  .btn-run.running { animation: runPulse 1s ease infinite; }
+
+  @keyframes runPulse {
+    0%, 100% { box-shadow: 0 0 24px var(--accent-glow); }
+    50% { box-shadow: 0 0 40px rgba(99,202,183,0.5); }
+  }
+
+  .compiler-workspace {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: auto 1fr;
+    min-height: 560px;
+    border: 1px solid var(--border);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  .panel-header-actions { display: flex; gap: 6px; }
+  .panel-btn {
+    background: none; border: none;
+    color: var(--text-muted); padding: 2px 6px;
+    border-radius: 4px; font-size: 11px;
+    transition: all var(--transition);
+  }
+  .panel-btn:hover { color: var(--accent); background: var(--accent-glow); }
+
+  /* Code Editor */
+  .code-editor-panel {
+    grid-row: 1 / 3;
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--border);
+  }
+
+  .code-editor {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    background: var(--bg-surface);
+    position: relative;
+  }
+
+  .line-numbers {
+    min-width: 48px;
+    padding: 16px 8px;
+    text-align: right;
+    font-family: var(--font-code);
+    font-size: 13px; line-height: 1.65;
+    color: var(--text-muted);
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border);
+    user-select: none;
+    overflow: hidden;
+  }
+
+  #code-textarea {
+    flex: 1;
+    background: transparent;
+    border: none; outline: none; resize: none;
+    padding: 16px;
+    font-family: var(--font-code);
+    font-size: 13px; line-height: 1.65;
+    color: var(--text-primary);
+    caret-color: var(--accent);
+    tab-size: 2;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow: auto;
+    min-height: 400px;
+  }
+
+  /* Input Panel */
+  .input-panel {
+    display: flex; flex-direction: column;
+    border-bottom: 1px solid var(--border);
+    min-height: 130px;
+    max-height: 160px;
+  }
+
+  #input-textarea {
+    flex: 1;
+    background: transparent;
+    border: none; outline: none; resize: none;
+    padding: 12px 16px;
+    font-family: var(--font-code);
+    font-size: 12px; line-height: 1.6;
+    color: var(--text-secondary);
+    caret-color: var(--accent);
+  }
+
+  /* Output Panel */
+  .output-panel {
+    display: flex; flex-direction: column;
+    min-height: 200px;
+  }
+
+  .output-content {
+    flex: 1;
+    padding: 14px 16px;
+    font-family: var(--font-code);
+    font-size: 13px; line-height: 1.7;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .output-content.empty { display: flex; align-items: center; justify-content: center; }
+  .output-empty-msg {
+    text-align: center; color: var(--text-muted); font-size: 13px;
+  }
+  .output-empty-msg .icon { font-size: 28px; margin-bottom: 6px; display: block; }
+
+  .output-line { margin-bottom: 2px; }
+  .out-success { color: var(--green); }
+  .out-error { color: var(--red); }
+  .out-info { color: var(--blue); }
+  .out-warn { color: var(--yellow); }
+  .out-system { color: var(--text-muted); font-style: italic; }
+
+  .output-typing::after {
+    content: '▊';
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* API Notice */
+  .api-notice {
+    margin: 8px 16px;
+    padding: 8px 12px;
+    background: rgba(245,200,66,0.06);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 11px; color: var(--yellow);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* =============================================
+     FEATURES SECTION
+  ============================================= */
+  .features-section { background: var(--bg-surface); }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    transition: all var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--feature-color, var(--accent));
+    transform: scaleX(0);
+    transition: transform var(--transition);
+    transform-origin: left;
+  }
+  .feature-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+  .feature-card:hover::after { transform: scaleX(1); }
+
+  .feature-icon-wrap {
+    width: 48px; height: 48px;
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin-bottom: 18px;
+    background: var(--feature-bg, var(--accent-glow));
+  }
+
+  .feature-title {
+    font-family: var(--font-display);
+    font-size: 17px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* =============================================
+     HOW IT WORKS
+  ============================================= */
+  .how-section { background: var(--bg-base); }
+
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0; position: relative;
+  }
+  .steps-grid::before {
+    content: '';
+    position: absolute; top: 32px; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+  }
+
+  .step-item { padding: 0 16px; text-align: center; }
+  .step-num-wrap {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    position: relative; z-index: 1;
+    transition: all var(--transition);
+    font-size: 24px;
+  }
+  .step-item:hover .step-num-wrap {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    box-shadow: 0 0 24px var(--accent-glow);
+  }
+  .step-label { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .step-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* =============================================
+     FAQ
+  ============================================= */
+  .faq-section { background: var(--bg-surface); }
+  .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .faq-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color var(--transition);
+  }
+  .faq-item:hover { border-color: var(--border-accent); }
+
+  .faq-question {
+    width: 100%; text-align: left;
+    background: none; border: none;
+    padding: 18px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    font-size: 14px; font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: color var(--transition);
+  }
+  .faq-question:hover { color: var(--accent); }
+
+  .faq-chevron {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    transition: transform var(--transition), background var(--transition);
+  }
+  .faq-item.open .faq-chevron {
+    transform: rotate(180deg);
+    background: var(--accent-glow);
+    color: var(--accent);
+  }
+
+  .faq-answer {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease, padding var(--transition);
+    padding: 0 20px;
+    font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .faq-item.open .faq-answer {
+    max-height: 200px;
+    padding-bottom: 18px;
+  }
+
+  /* =============================================
+     TRUST SECTION
+  ============================================= */
+  .trust-section { background: var(--bg-base); padding: 64px 32px; }
+  .trust-inner { max-width: 1200px; margin: 0 auto; text-align: center; }
+  .trust-title {
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
+    color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+  .trust-logos {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 40px;
+  }
+  .trust-logo {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: -0.02em;
+    opacity: 0.4;
+    transition: opacity var(--transition);
+  }
+  .trust-logo:hover { opacity: 0.7; }
+
+  /* =============================================
+     TESTIMONIALS
+  ============================================= */
+  .testimonials-section { background: var(--bg-surface); }
+  .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  .testimonial-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    transition: all var(--transition);
+  }
+  .testimonial-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+  .testimonial-stars { color: var(--yellow); font-size: 14px; margin-bottom: 14px; }
+  .testimonial-text { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 18px; }
+  .testimonial-author { display: flex; align-items: center; gap: 10px; }
+  .testimonial-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .testimonial-name { font-weight: 700; font-size: 14px; }
+  .testimonial-role { font-size: 12px; color: var(--text-muted); }
+
+  /* =============================================
+     CTA SECTION
+  ============================================= */
+  .cta-section {
+    padding: 96px 32px;
+    background: var(--bg-base);
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--accent-glow), transparent 70%);
+    pointer-events: none;
+  }
+  .cta-section .section-inner { position: relative; z-index: 1; }
+
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 800; letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+  .cta-sub { font-size: 17px; color: var(--text-secondary); margin-bottom: 36px; }
+  .cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+  /* =============================================
+     FOOTER
+  ============================================= */
+  footer {
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    padding: 60px 32px 32px;
+  }
+  .footer-inner { max-width: 1200px; margin: 0 auto; }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+  .footer-brand-desc {
+    font-size: 14px; color: var(--text-secondary); line-height: 1.7;
+    margin: 14px 0 20px;
+    max-width: 280px;
+  }
+  .footer-social { display: flex; gap: 8px; }
+  .footer-social-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--text-muted);
+    transition: all var(--transition);
+  }
+  .footer-social-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .footer-col-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+  .footer-links { list-style: none; }
+  .footer-links li { margin-bottom: 10px; }
+  .footer-links a { font-size: 13px; color: var(--text-secondary); transition: color var(--transition); }
+  .footer-links a:hover { color: var(--accent); text-decoration: none; }
+
+  .footer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-muted);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-bottom a { color: var(--text-muted); }
+  .footer-bottom a:hover { color: var(--accent); }
+
+  /* =============================================
+     TOAST
+  ============================================= */
+  .toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    z-index: 9000;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    display: flex; align-items: center; gap: 8px;
+    transform: translateY(20px); opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+  .toast.info { border-color: var(--accent); }
+
+  /* =============================================
+     RESPONSIVE
+  ============================================= */
+  @media (max-width: 1100px) {
+    .hero-content { grid-template-columns: 1fr; gap: 48px; }
+    .hero-visual { max-width: 560px; }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .testimonials-grid { grid-template-columns: 1fr 1fr; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid::before { display: none; }
+    .step-item { padding: 24px 16px; }
+  }
+
+  @media (max-width: 800px) {
+    .section { padding: 64px 20px; }
+    nav { display: none; }
+    .mobile-menu-btn { display: flex; }
+    .hero { padding: calc(var(--header-h) + 40px) 20px 60px; }
+    .compiler-workspace {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .code-editor-panel {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .features-grid { grid-template-columns: 1fr; }
+    .faq-grid { grid-template-columns: 1fr; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; }
+    header { padding: 0 16px; }
+    .hero-stats { gap: 20px; }
+    .steps-grid { grid-template-columns: 1fr 1fr; }
+    .lang-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 480px) {
+    .steps-grid { grid-template-columns: 1fr; }
+    .lang-cards { grid-template-columns: 1fr; }
+    .hero-ctas { flex-direction: column; align-items: flex-start; }
+    .compiler-toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar-left, .toolbar-right { justify-content: flex-start; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header id="main-header">
+  <a href="#" class="logo" onclick="scrollToTop(event)">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="8" fill="#63CAB7" fill-opacity="0.12"/>
+      <path d="M8 11L13 16L8 21" stroke="#63CAB7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15 20H24" stroke="#63CAB7" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="24" cy="11" r="2.5" fill="#F07C5A"/>
+      <circle cx="19" cy="11" r="2.5" fill="#F5C842"/>
+      <circle cx="14" cy="11" r="2.5" fill="#4ECB8A"/>
+    </svg>
+    <span class="logo-text">Allinone<span>Compiler</span></span>
+  </a>
+
+  <nav>
+    <a href="#languages">Languages</a>
+    <a href="#compiler">Playground</a>
+    <a href="#features">Features</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="btn-theme" id="theme-toggle" title="Toggle theme" onclick="toggleTheme()">
+      <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+    <button class="btn-primary" onclick="document.getElementById('compiler').scrollIntoView({behavior:'smooth'})">Launch Compiler</button>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    <div class="hero-glow-3"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Now supporting 11+ languages
+      </div>
+      <h1 class="hero-headline">
+        Write, Test &<br>
+        <span class="line2">Explore Code</span><br>
+        In One Place
+      </h1>
+      <p class="hero-sub">
+        A blazing-fast online compiler and playground for developers and learners.
+        Run JavaScript live, explore samples in Python, Java, Rust, Go, and more —
+        no setup required.
+      </p>
+      <div class="hero-ctas">
+        <button class="btn-hero-primary" onclick="document.getElementById('compiler').scrollIntoView({behavior:'smooth'})">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Start Coding Free
+        </button>
+        <button class="btn-hero-secondary" onclick="document.getElementById('languages').scrollIntoView({behavior:'smooth'})">
+          Browse Languages
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat-item">
+          <div class="hero-stat-num" data-count="11">0<span>+</span></div>
+          <div class="hero-stat-label">Languages</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-num" data-count="50">0<span>K+</span></div>
+          <div class="hero-stat-label">Programs Run</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-num" data-count="100">0<span>%</span></div>
+          <div class="hero-stat-label">Browser-Based</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-editor-mock">
+        <div class="mock-titlebar">
+          <span class="mock-dot red"></span>
+          <span class="mock-dot yellow"></span>
+          <span class="mock-dot green"></span>
+          <span class="mock-title">main.js — AllinoneCompiler</span>
+          <span class="mock-lang-badge">JavaScript</span>
+        </div>
+        <div class="mock-code">
+          <div><span class="ln">1</span><span class="cm">// Allinone Compiler — Live Preview</span></div>
+          <div><span class="ln">2</span></div>
+          <div><span class="ln">3</span><span class="kw">const</span> <span class="fn">greet</span> = (<span class="str">name</span>) <span class="kw">=&gt;</span> {</div>
+          <div><span class="ln">4</span>&nbsp;&nbsp;<span class="kw">return</span> <span class="str">`Hello, <span class="fn">${name}</span>! 👋`</span>;</div>
+          <div><span class="ln">5</span>};</div>
+          <div><span class="ln">6</span></div>
+          <div><span class="ln">7</span><span class="kw">const</span> languages = [</div>
+          <div><span class="ln">8</span>&nbsp;&nbsp;<span class="str">"Python"</span>, <span class="str">"Rust"</span>, <span class="str">"Go"</span></div>
+          <div><span class="ln">9</span>];</div>
+          <div><span class="ln">10</span></div>
+          <div><span class="ln">11</span>languages.<span class="fn">forEach</span>(lang <span class="kw">=&gt;</span></div>
+          <div><span class="ln">12</span>&nbsp;&nbsp;console.<span class="fn">log</span>(<span class="fn">greet</span>(lang))</div>
+          <div><span class="ln">13</span>);</div>
+        </div>
+        <div class="mock-output">
+          <div class="mock-output-label">▶ Output</div>
+          <div class="mock-output-text" id="hero-output-text">Hello, Python! 👋</div>
+        </div>
+      </div>
+      <div class="hero-float-badge badge-1">✓ Runs in browser</div>
+      <div class="hero-float-badge badge-2">⚡ Zero setup</div>
+      <div class="hero-float-badge badge-3">🌙 Dark mode</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRUST ===================== -->
+<div class="trust-section reveal">
+  <div class="trust-inner">
+    <div class="trust-title">Loved by developers at</div>
+    <div class="trust-logos">
+      <span class="trust-logo">OpenSource</span>
+      <span class="trust-logo">DevCollective</span>
+      <span class="trust-logo">HackerLeague</span>
+      <span class="trust-logo">CodeByte</span>
+      <span class="trust-logo">StackForge</span>
+      <span class="trust-logo">NullPointerCo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LANGUAGES ===================== -->
+<section class="section languages-section" id="languages">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-label">Supported Languages</div>
+      <h2 class="section-title">Top & Trending in 2026</h2>
+      <p class="section-sub">From beginner-friendly Python to systems-level Rust — explore sample programs for every language with one click.</p>
+    </div>
+
+    <div class="lang-tabs reveal" id="lang-filter-tabs">
+      <button class="lang-tab active" data-filter="all">All Languages</button>
+      <button class="lang-tab" data-filter="hot">🔥 Hot</button>
+      <button class="lang-tab" data-filter="web">🌐 Web</button>
+      <button class="lang-tab" data-filter="systems">⚙️ Systems</button>
+      <button class="lang-tab" data-filter="data">📊 Data</button>
+    </div>
+
+    <div class="lang-cards reveal" id="lang-cards-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COMPILER ===================== -->
+<section class="section compiler-section" id="compiler">
+  <div class="section-inner">
+    <div class="section-header reveal" style="text-align:center">
+      <div class="section-label" style="justify-content:center">Compiler Playground</div>
+      <h2 class="section-title">Write & Run Code Instantly</h2>
+      <p class="section-sub" style="margin:0 auto">JavaScript runs live in your browser. For other languages, explore samples with mock output and instant syntax highlighting.</p>
+    </div>
+
+    <div class="reveal">
+      <!-- Toolbar -->
+      <div class="compiler-toolbar">
+        <div class="toolbar-left">
+          <div class="lang-selector" id="lang-selector-btn" onclick="toggleLangDropdown()">
+            <span class="lang-selector-icon" id="sel-icon">🟨</span>
+            <span class="lang-selector-text" id="sel-name">JavaScript</span>
+            <svg class="lang-selector-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <div class="lang-dropdown" id="lang-dropdown">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <button class="btn-toolbar" onclick="loadSample()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Load Sample
+          </button>
+          <button class="btn-toolbar" onclick="resetEditor()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+            </svg>
+            Reset
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn-toolbar" onclick="copyCode()" title="Copy code">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy
+          </button>
+          <button class="btn-run" id="run-btn" onclick="runCode()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Run Code
+          </button>
+        </div>
+      </div>
+
+      <!-- Workspace -->
+      <div class="compiler-workspace">
+        <!-- Code Editor -->
+        <div class="code-editor-panel">
+          <div class="panel-header">
+            <span>Code Editor</span>
+            <div class="panel-header-actions">
+              <span id="lang-indicator" style="color:var(--accent);font-size:11px;font-weight:700;">JavaScript</span>
+            </div>
+          </div>
+          <div class="code-editor">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="code-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="// Start coding here..."></textarea>
+          </div>
+        </div>
+
+        <!-- Right: Input + Output -->
+        <div style="display:flex;flex-direction:column;overflow:hidden;">
+          <!-- Input -->
+          <div class="input-panel">
+            <div class="panel-header">
+              <span>Stdin / Input</span>
+              <div class="panel-header-actions">
+                <button class="panel-btn" onclick="clearInput()">Clear</button>
+              </div>
+            </div>
+            <textarea id="input-textarea" placeholder="Optional: provide standard input here..." spellcheck="false"></textarea>
+          </div>
+
+          <!-- Output -->
+          <div class="output-panel">
+            <div class="panel-header">
+              <span>Output / Console</span>
+              <div class="panel-header-actions">
+                <span id="exec-time" style="color:var(--accent);font-size:11px;display:none;"></span>
+                <button class="panel-btn" onclick="clearOutput()">Clear</button>
+              </div>
+            </div>
+            <div class="output-content empty" id="output-content">
+              <div class="output-empty-msg">
+                <span class="icon">▶</span>
+                Run your code to see output here
+              </div>
+            </div>
+            <div id="api-notice" class="api-notice" style="display:none;">
+              ⚠️ <span id="api-notice-text">Mock output shown. Connect a compiler API for real execution.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="section features-section" id="features">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-label">Platform Features</div>
+      <h2 class="section-title">Everything you need to code</h2>
+      <p class="section-sub">Built for speed, learning, and exploration. Professional tools without the friction.</p>
+    </div>
+
+    <div class="features-grid reveal">
+      <div class="feature-card" style="--feature-color:var(--accent);--feature-bg:rgba(99,202,183,0.1)">
+        <div class="feature-icon-wrap">⚡</div>
+        <div class="feature-title">Instant Execution</div>
+        <div class="feature-desc">JavaScript and browser-native code runs in real time, directly in your browser — no server roundtrips needed.</div>
+      </div>
+      <div class="feature-card" style="--feature-color:var(--accent2);--feature-bg:rgba(240,124,90,0.1)">
+        <div class="feature-icon-wrap">🌙</div>
+        <div class="feature-title">Dark & Light Mode</div>
+        <div class="feature-desc">Switch between carefully crafted dark and light themes with a single click. Your eyes will thank you at 2 AM.</div>
+      </div>
+      <div class="feature-card" style="--feature-color:var(--accent3);--feature-bg:rgba(139,124,246,0.12)">
+        <div class="feature-icon-wrap">📋</div>
+        <div class="feature-title">11+ Language Samples</div>
+        <div class="feature-desc">Curated sample programs for Python, Java, C, C++, Go, Rust, PHP, SQL, and more — ready to load instantly.</div>
+      </div>
+      <div class="feature-card" style="--feature-color:var(--yellow);--feature-bg:rgba(245,200,66,0.1)">
+        <div class="feature-icon-wrap">🎨</div>
+        <div class="feature-title">Syntax Highlighting</div>
+        <div class="feature-desc">Code-style typography with a monospace editor panel. Clean, distraction-free environment for focused coding.</div>
+      </div>
+      <div class="feature-card" style="--feature-color:var(--green);--feature-bg:rgba(78,203,138,0.1)">
+        <div class="feature-icon-wrap">📦</div>
+        <div class="feature-title">Stdin Support</div>
+        <div class="feature-desc">Pass custom standard input to your programs. Test edge cases and interactive programs with any input you need.</div>
+      </div>
+      <div class="feature-card" style="--feature-color:var(--blue);--feature-bg:rgba(95,168,245,0.1)">
+        <div class="feature-icon-wrap">🔌</div>
+        <div class="feature-title">API-Ready Architecture</div>
+        <div class="feature-desc">Pre-wired placeholder for compiler backend integration. Drop in your API endpoint to enable full language execution.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="section how-section" id="how">
+  <div class="section-inner">
+    <div class="section-header reveal" style="text-align:center">
+      <div class="section-label" style="justify-content:center">How It Works</div>
+      <h2 class="section-title">From idea to output in seconds</h2>
+    </div>
+    <div class="steps-grid reveal">
+      <div class="step-item">
+        <div class="step-num-wrap">🌐</div>
+        <div class="step-label">Pick a Language</div>
+        <div class="step-desc">Choose from 11+ languages using the selector. Each one comes with a preloaded sample program.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-wrap">✏️</div>
+        <div class="step-label">Write Your Code</div>
+        <div class="step-desc">Use the built-in editor panel to write, edit, or paste your code. Reset anytime with one click.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-wrap">▶</div>
+        <div class="step-label">Hit Run</div>
+        <div class="step-desc">Execute your code. JavaScript runs natively. Other languages show sample output with an animated response.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-wrap">📤</div>
+        <div class="step-label">See Output</div>
+        <div class="step-desc">Execution results appear in the output panel with color-coded messages. Copy your code or share it easily.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TESTIMONIALS ===================== -->
+<section class="section testimonials-section" id="testimonials">
+  <div class="section-inner">
+    <div class="section-header reveal" style="text-align:center">
+      <div class="section-label" style="justify-content:center">Community Love</div>
+      <h2 class="section-title">What developers are saying</h2>
+    </div>
+    <div class="testimonials-grid reveal">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"Finally an online compiler that doesn't feel like it was built in 2010. The dark mode is chef's kiss and it loads instantly."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">👩‍💻</div>
+          <div>
+            <div class="testimonial-name">Priya K.</div>
+            <div class="testimonial-role">Full Stack Developer, Bengaluru</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">"The language samples are super helpful when I'm learning a new language. I love how smooth the transitions are between languages."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">👨‍🎓</div>
+          <div>
+            <div class="testimonial-name">Marco T.</div>
+            <div class="testimonial-role">CS Student, Milan</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★☆</div>
+        <div class="testimonial-text">"I use this to quickly test JavaScript snippets during interviews. The clean UI doesn't distract and the copy button actually works!"</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">🧑‍💼</div>
+          <div>
+            <div class="testimonial-name">Alex R.</div>
+            <div class="testimonial-role">Software Engineer, Toronto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section class="section faq-section" id="faq">
+  <div class="section-inner">
+    <div class="section-header reveal" style="text-align:center">
+      <div class="section-label" style="justify-content:center">FAQ</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-grid reveal" id="faq-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="cta-section reveal">
+  <div class="section-inner">
+    <h2 class="cta-title">Ready to start coding?</h2>
+    <p class="cta-sub">No account. No install. No excuses. Just open your browser and go.</p>
+    <div class="cta-btns">
+      <button class="btn-hero-primary" onclick="document.getElementById('compiler').scrollIntoView({behavior:'smooth'})">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Open Compiler
+      </button>
+      <button class="btn-hero-secondary" onclick="document.getElementById('languages').scrollIntoView({behavior:'smooth'})">
+        Explore Languages
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <a href="#" class="logo" onclick="scrollToTop(event)" style="display:inline-flex">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="#63CAB7" fill-opacity="0.12"/>
+            <path d="M8 11L13 16L8 21" stroke="#63CAB7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 20H24" stroke="#63CAB7" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="24" cy="11" r="2.5" fill="#F07C5A"/>
+            <circle cx="19" cy="11" r="2.5" fill="#F5C842"/>
+            <circle cx="14" cy="11" r="2.5" fill="#4ECB8A"/>
+          </svg>
+          <span class="logo-text" style="font-size:16px">Allinone<span>Compiler</span></span>
+        </a>
+        <p class="footer-brand-desc">Write, test, and explore code in one place. Built for developers and learners who want speed and simplicity.</p>
+        <div class="footer-social">
+          <a class="footer-social-btn" href="#" title="GitHub">⬡</a>
+          <a class="footer-social-btn" href="#" title="Twitter">✕</a>
+          <a class="footer-social-btn" href="#" title="Discord">◈</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Product</div>
+        <ul class="footer-links">
+          <li><a href="#compiler">Compiler</a></li>
+          <li><a href="#languages">Languages</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#">API Docs</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Resources</div>
+        <ul class="footer-links">
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Sample Programs</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Use</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Allinone Compiler. All rights reserved.</span>
+      <span>Built with ❤️ for developers everywhere.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ===================== TOAST CONTAINER ===================== -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ===================== JAVASCRIPT ===================== -->
+<script>
+/* ================================================
+   DATA — LANGUAGE DEFINITIONS
+================================================ */
+const LANGUAGES = [
+  {
+    id: 'javascript', name: 'JavaScript', icon: '🟨', badge: 'hot', badgeClass: 'badge-hot',
+    desc: 'The language of the web. Runs live in your browser.', useCase: 'Web, Node.js, APIs',
+    filter: ['all','hot','web'], canRunNative: true,
+    sample: `// JavaScript — Live in Browser
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+for (let i = 0; i <= 10; i++) {
+  console.log(\`fib(\${i}) = \${fibonacci(i)}\`);
+}
+
+console.log("\\n✅ JavaScript runs natively here!");`
+  },
+  {
+    id: 'python', name: 'Python', icon: '🐍', badge: 'hot', badgeClass: 'badge-hot',
+    desc: '#1 most-demanded language for 2026. Data, AI, scripting.', useCase: 'AI, Data Science, Web',
+    filter: ['all','hot','data'], canRunNative: false,
+    sample: `# Python — Sample Program
+def greet(name: str) -> str:
+    return f"Hello, {name}! 🐍"
+
+# Fibonacci sequence
+def fibonacci(n: int) -> list:
+    seq = [0, 1]
+    for _ in range(n - 2):
+        seq.append(seq[-1] + seq[-2])
+    return seq[:n]
+
+print(greet("World"))
+print("Fibonacci:", fibonacci(10))
+
+# List comprehension
+squares = [x**2 for x in range(1, 6)]
+print("Squares:", squares)`
+  },
+  {
+    id: 'java', name: 'Java', icon: '☕', badge: 'popular', badgeClass: 'badge-popular',
+    desc: 'Enterprise-grade OOP. Write once, run anywhere.', useCase: 'Enterprise, Android, Backend',
+    filter: ['all','systems'], canRunNative: false,
+    sample: `// Java — Sample Program
+import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+    public static String greet(String name) {
+        return "Hello, " + name + "! ☕";
+    }
+
+    public static int factorial(int n) {
+        if (n <= 1) return 1;
+        return n * factorial(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(greet("Java Developer"));
+        
+        List<String> langs = Arrays.asList("Python", "Rust", "Go");
+        langs.forEach(lang -> System.out.println("Language: " + lang));
+        
+        System.out.println("5! = " + factorial(5));
+    }
+}`
+  },
+  {
+    id: 'c', name: 'C', icon: '⚙️', badge: 'classic', badgeClass: 'badge-classic',
+    desc: 'The foundation of modern computing. Fast and powerful.', useCase: 'Systems, Embedded, OS',
+    filter: ['all','systems'], canRunNative: false,
+    sample: `// C — Sample Program
+#include <stdio.h>
+#include <string.h>
+
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+void reverse_string(char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len / 2; i++) {
+        char temp = str[i];
+        str[i] = str[len - 1 - i];
+        str[len - 1 - i] = temp;
+    }
+}
+
+int main() {
+    printf("Hello, C World! ⚙️\\n");
+    printf("Factorial of 7: %d\\n", factorial(7));
+    
+    char word[] = "Allinone";
+    reverse_string(word);
+    printf("Reversed: %s\\n", word);
+    
+    return 0;
+}`
+  },
+  {
+    id: 'cpp', name: 'C++', icon: '🔵', badge: 'popular', badgeClass: 'badge-popular',
+    desc: 'Power of C with OOP. Used in games, engines, finance.', useCase: 'Game Dev, Systems, HFT',
+    filter: ['all','systems'], canRunNative: false,
+    sample: `// C++ — Sample Program
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+class Stack {
+    vector<int> data;
+public:
+    void push(int val) { data.push_back(val); }
+    int pop() { 
+        int val = data.back(); 
+        data.pop_back(); 
+        return val; 
+    }
+    bool empty() { return data.empty(); }
+    int size() { return data.size(); }
+};
+
+int main() {
+    cout << "Hello, C++! 🔵" << endl;
+    
+    Stack s;
+    for (int i = 1; i <= 5; i++) s.push(i * 10);
+    
+    cout << "Stack size: " << s.size() << endl;
+    while (!s.empty()) cout << s.pop() << " ";
+    cout << endl;
+    
+    return 0;
+}`
+  },
+  {
+    id: 'csharp', name: 'C#', icon: '💜', badge: 'popular', badgeClass: 'badge-popular',
+    desc: 'Microsoft\'s elegant language. .NET, Unity, enterprise apps.', useCase: '.NET, Unity, Azure',
+    filter: ['all','web'], canRunNative: false,
+    sample: `// C# — Sample Program
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class Program {
+    static string Greet(string name) => $"Hello, {name}! 💜";
+
+    static IEnumerable<int> GetPrimes(int max) {
+        return Enumerable.Range(2, max - 1)
+            .Where(n => Enumerable.Range(2, (int)Math.Sqrt(n) - 1)
+                .All(d => n % d != 0));
+    }
+
+    static void Main() {
+        Console.WriteLine(Greet("C# Developer"));
+        
+        var primes = GetPrimes(30).ToList();
+        Console.WriteLine($"Primes up to 30: {string.Join(", ", primes)}");
+        
+        var fruits = new List<string> { "Apple", "Banana", "Cherry" };
+        fruits.ForEach(f => Console.WriteLine($"  🍎 {f}"));
+    }
+}`
+  },
+  {
+    id: 'go', name: 'Go', icon: '🐹', badge: 'trending', badgeClass: 'badge-trending',
+    desc: 'Google\'s fast, simple, concurrent language. Rising fast.', useCase: 'Cloud, Microservices, CLI',
+    filter: ['all','hot','systems'], canRunNative: false,
+    sample: `// Go — Sample Program
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func isPalindrome(s string) bool {
+    s = strings.ToLower(s)
+    runes := []rune(s)
+    for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+        if runes[i] != runes[j] {
+            return false
+        }
+    }
+    return true
+}
+
+func main() {
+    fmt.Println("Hello, Go! 🐹")
+    
+    words := []string{"racecar", "hello", "level", "world", "civic"}
+    for _, w := range words {
+        fmt.Printf("  %s → palindrome: %v\\n", w, isPalindrome(w))
+    }
+    
+    // Goroutine simulation (sequential for demo)
+    ch := make(chan int, 5)
+    for i := 1; i <= 5; i++ {
+        ch <- i * i
+    }
+    close(ch)
+    fmt.Print("Squares: ")
+    for v := range ch {
+        fmt.Printf("%d ", v)
+    }
+}`
+  },
+  {
+    id: 'rust', name: 'Rust', icon: '🦀', badge: 'trending', badgeClass: 'badge-trending',
+    desc: 'Memory-safe systems language. The future of low-level.', useCase: 'Systems, WebAssembly, CLI',
+    filter: ['all','hot','systems'], canRunNative: false,
+    sample: `// Rust — Sample Program
+fn is_prime(n: u64) -> bool {
+    if n < 2 { return false; }
+    if n == 2 { return true; }
+    if n % 2 == 0 { return false; }
+    let mut i = 3;
+    while i * i <= n {
+        if n % i == 0 { return false; }
+        i += 2;
+    }
+    true
+}
+
+fn fibonacci(n: u32) -> Vec<u64> {
+    let mut seq = vec![0u64, 1];
+    for i in 2..n as usize {
+        let next = seq[i-1] + seq[i-2];
+        seq.push(next);
+    }
+    seq[..n as usize].to_vec()
+}
+
+fn main() {
+    println!("Hello, Rust! 🦀");
+    
+    let primes: Vec<u64> = (2..30).filter(|&n| is_prime(n)).collect();
+    println!("Primes < 30: {:?}", primes);
+    
+    let fib = fibonacci(8);
+    println!("Fibonacci: {:?}", fib);
+}`
+  },
+  {
+    id: 'php', name: 'PHP', icon: '🐘', badge: 'classic', badgeClass: 'badge-classic',
+    desc: 'Powering 78% of the web. WordPress, Laravel, backend.', useCase: 'Web Backend, CMS, APIs',
+    filter: ['all','web'], canRunNative: false,
+    sample: `<?php
+// PHP — Sample Program
+function greet(string $name): string {
+    return "Hello, $name! 🐘";
+}
+
+function arrayStats(array $nums): array {
+    return [
+        'count' => count($nums),
+        'sum'   => array_sum($nums),
+        'avg'   => array_sum($nums) / count($nums),
+        'min'   => min($nums),
+        'max'   => max($nums),
+    ];
+}
+
+echo greet("PHP Developer") . "\\n";
+
+$numbers = [4, 8, 15, 16, 23, 42];
+$stats = arrayStats($numbers);
+
+echo "Numbers: " . implode(", ", $numbers) . "\\n";
+foreach ($stats as $key => $value) {
+    echo "  $key: $value\\n";
+}
+
+$fruits = ["apple", "banana", "cherry"];
+$upper = array_map('strtoupper', $fruits);
+echo "Uppercase: " . implode(", ", $upper) . "\\n";
+?>`
+  },
+  {
+    id: 'sql', name: 'SQL', icon: '🗄️', badge: 'classic', badgeClass: 'badge-classic',
+    desc: 'The language of data. Essential for every backend role.', useCase: 'Databases, Analytics, ETL',
+    filter: ['all','data'], canRunNative: false,
+    sample: `-- SQL — Sample Queries
+-- Create a sample table
+CREATE TABLE employees (
+    id        INTEGER PRIMARY KEY,
+    name      VARCHAR(100) NOT NULL,
+    dept      VARCHAR(50),
+    salary    DECIMAL(10,2),
+    hire_date DATE
+);
+
+-- Insert sample data
+INSERT INTO employees VALUES
+    (1, 'Alice Chen',   'Engineering', 95000, '2021-03-15'),
+    (2, 'Bob Patel',    'Marketing',   72000, '2020-07-22'),
+    (3, 'Carol Smith',  'Engineering', 110000,'2019-01-10'),
+    (4, 'David Lee',    'HR',          65000, '2022-09-01'),
+    (5, 'Eva Garcia',   'Engineering', 98000, '2021-11-30');
+
+-- Query: Top earners by department
+SELECT dept,
+       COUNT(*) AS headcount,
+       AVG(salary) AS avg_salary,
+       MAX(salary) AS top_salary
+FROM   employees
+GROUP  BY dept
+ORDER  BY avg_salary DESC;`
+  },
+  {
+    id: 'html', name: 'HTML/CSS/JS', icon: '🌐', badge: 'hot', badgeClass: 'badge-hot',
+    desc: 'The trio of the web. Runs live with full preview.', useCase: 'Web Frontend, UI, Prototyping',
+    filter: ['all','hot','web'], canRunNative: true,
+    sample: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0a0c10 0%, #1d2330 100%);
+    color: #e8edf5; display: flex;
+    align-items: center; justify-content: center;
+    min-height: 100vh; margin: 0; flex-direction: column;
+  }
+  h1 { font-size: 2em; color: #63CAB7; margin-bottom: 8px; }
+  .card {
+    background: #171c28; border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 32px 48px; text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  button {
+    background: #63CAB7; color: #000; border: none;
+    padding: 10px 24px; border-radius: 8px;
+    font-weight: 700; cursor: pointer; margin-top: 16px;
+    transition: transform 0.15s ease;
+  }
+  button:hover { transform: scale(1.05); }
+  #counter { font-size: 3em; font-weight: 800; color: #F07C5A; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🌐 Hello, Web!</h1>
+  <p>Click the button to count:</p>
+  <div id="counter">0</div>
+  <button onclick="count()">Click Me!</button>
+</div>
+<script>
+  let n = 0;
+  function count() {
+    document.getElementById('counter').textContent = ++n;
+  }
+</script>
+</body>
+</html>`
+  }
+];
+
+/* ================================================
+   DATA — MOCK OUTPUTS
+================================================ */
+const MOCK_OUTPUTS = {
+  python: [
+    { text: "Hello, World! 🐍", cls: 'out-success' },
+    { text: "Fibonacci: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]", cls: 'out-success' },
+    { text: "Squares: [1, 4, 9, 16, 25]", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  java: [
+    { text: "Hello, Java Developer! ☕", cls: 'out-success' },
+    { text: "Language: Python", cls: 'out-success' },
+    { text: "Language: Rust", cls: 'out-success' },
+    { text: "Language: Go", cls: 'out-success' },
+    { text: "5! = 120", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  c: [
+    { text: "Hello, C World! ⚙️", cls: 'out-success' },
+    { text: "Factorial of 7: 5040", cls: 'out-success' },
+    { text: "Reversed: enosnillA", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  cpp: [
+    { text: "Hello, C++! 🔵", cls: 'out-success' },
+    { text: "Stack size: 5", cls: 'out-success' },
+    { text: "50 40 30 20 10 ", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  csharp: [
+    { text: "Hello, C# Developer! 💜", cls: 'out-success' },
+    { text: "Primes up to 30: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29", cls: 'out-success' },
+    { text: "  🍎 Apple", cls: 'out-success' },
+    { text: "  🍎 Banana", cls: 'out-success' },
+    { text: "  🍎 Cherry", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  go: [
+    { text: "Hello, Go! 🐹", cls: 'out-success' },
+    { text: "  racecar → palindrome: true", cls: 'out-success' },
+    { text: "  hello → palindrome: false", cls: 'out-success' },
+    { text: "  level → palindrome: true", cls: 'out-success' },
+    { text: "  world → palindrome: false", cls: 'out-success' },
+    { text: "  civic → palindrome: true", cls: 'out-success' },
+    { text: "Squares: 1 4 9 16 25 ", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  rust: [
+    { text: "Hello, Rust! 🦀", cls: 'out-success' },
+    { text: "Primes < 30: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]", cls: 'out-success' },
+    { text: "Fibonacci: [0, 1, 1, 2, 3, 5, 8, 13]", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  php: [
+    { text: "Hello, PHP Developer! 🐘", cls: 'out-success' },
+    { text: "Numbers: 4, 8, 15, 16, 23, 42", cls: 'out-success' },
+    { text: "  count: 6", cls: 'out-success' },
+    { text: "  sum: 108", cls: 'out-success' },
+    { text: "  avg: 18", cls: 'out-success' },
+    { text: "  min: 4", cls: 'out-success' },
+    { text: "  max: 42", cls: 'out-success' },
+    { text: "Uppercase: APPLE, BANANA, CHERRY", cls: 'out-success' },
+    { text: "", cls: '' },
+    { text: "Process finished with exit code 0", cls: 'out-system' },
+  ],
+  sql: [
+    { text: "Query result: GROUP BY dept", cls: 'out-info' },
+    { text: "┌─────────────┬───────────┬──────────────┬──────────────┐", cls: 'out-info' },
+    { text: "│ dept        │ headcount │  avg_salary  │  top_salary  │", cls: 'out-info' },
+    { text: "├─────────────┼───────────┼──────────────┼──────────────┤", cls: 'out-info' },
+    { text: "│ Engineering │     3     │  101000.00   │  110000.00   │", cls: 'out-success' },
+    { text: "│ Marketing   │     1     │   72000.00   │   72000.00   │", cls: 'out-success' },
+    { text: "│ HR          │     1     │   65000.00   │   65000.00   │", cls: 'out-success' },
+    { text: "└─────────────┴───────────┴──────────────┴──────────────┘", cls: 'out-info' },
+    { text: "", cls: '' },
+    { text: "5 rows inserted. Query executed in 0.002s", cls: 'out-system' },
+  ],
+};
+
+const FAQ_DATA = [
+  { q: "Can I run real Python or Java code?", a: "JavaScript and HTML/CSS/JS run natively in your browser. For server-side languages like Python, Java, C, etc., Allinone Compiler provides curated sample output. Connect a compiler backend API (like JDoodle, Judge0, or your own) to enable real execution for all languages." },
+  { q: "Do I need to create an account?", a: "No account required! Allinone Compiler works completely in your browser. Just open the page and start coding. No login, no email, no friction." },
+  { q: "How do I connect a compiler backend?", a: "Look for the API_ENDPOINT placeholder in the JavaScript source. Replace it with your Judge0, Piston, or custom backend URL. The architecture is pre-wired and ready to accept API responses." },
+  { q: "Is there a mobile version?", a: "Yes! Allinone Compiler is fully responsive. On smaller screens, the editor and output panels stack vertically for comfortable use on tablets and phones." },
+  { q: "Can I save my code?", a: "Currently code persists in your session. For sharing and saving, copy your code with the Copy button. Persistent storage and share links are on the roadmap." },
+  { q: "Which languages support live execution?", a: "JavaScript (full browser execution) and HTML/CSS/JS (live iframe preview) run in real time. All other languages show carefully crafted sample output until a backend is connected." },
+];
+
+/* ================================================
+   STATE
+================================================ */
+let currentLang = LANGUAGES.find(l => l.id === 'javascript');
+
+/* ================================================
+   INIT
+================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderLangCards('all');
+  renderLangDropdown();
+  renderFAQ();
+  setLanguage(currentLang);
+  initScrollReveal();
+  initScrollCounter();
+  initHeroOutputCycle();
+  syncLineNumbers();
+  document.getElementById('code-textarea').addEventListener('input', syncLineNumbers);
+  document.getElementById('code-textarea').addEventListener('scroll', syncEditorScroll);
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('lang-selector-btn').contains(e.target)) {
+      document.getElementById('lang-dropdown').classList.remove('open');
+    }
+  });
+
+  // Lang filter tabs
+  document.querySelectorAll('.lang-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderLangCards(btn.dataset.filter);
+    });
+  });
+});
+
+/* ================================================
+   RENDER LANGUAGE CARDS
+================================================ */
+function renderLangCards(filter) {
+  const grid = document.getElementById('lang-cards-grid');
+  const filtered = LANGUAGES.filter(l => l.filter.includes(filter));
+  grid.innerHTML = filtered.map(lang => `
+    <div class="lang-card" onclick="openSample('${lang.id}')">
+      <div class="lang-icon" style="background:var(--bg-elevated)">${lang.icon}</div>
+      <div class="lang-name">${lang.name}</div>
+      <div class="lang-desc">${lang.desc}</div>
+      <div class="lang-meta">
+        <span class="lang-badge ${lang.badgeClass}">${lang.badge}</span>
+        <span class="lang-use">${lang.useCase}</span>
+      </div>
+      <button class="btn-open-sample">Open Sample →</button>
+    </div>
+  `).join('');
+}
+
+/* ================================================
+   RENDER LANG DROPDOWN
+================================================ */
+function renderLangDropdown() {
+  const dd = document.getElementById('lang-dropdown');
+  dd.innerHTML = LANGUAGES.map(l => `
+    <div class="lang-dropdown-item ${l.id === currentLang.id ? 'selected' : ''}" onclick="selectLangFromDropdown('${l.id}')">
+      <span>${l.icon}</span>
+      <span>${l.name}</span>
+      ${l.canRunNative ? '<span style="margin-left:auto;font-size:10px;color:var(--green)">●</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function toggleLangDropdown() {
+  document.getElementById('lang-dropdown').classList.toggle('open');
+}
+
+function selectLangFromDropdown(id) {
+  document.getElementById('lang-dropdown').classList.remove('open');
+  const lang = LANGUAGES.find(l => l.id === id);
+  if (lang) setLanguage(lang);
+}
+
+/* ================================================
+   SET LANGUAGE
+================================================ */
+function setLanguage(lang) {
+  currentLang = lang;
+  document.getElementById('sel-icon').textContent = lang.icon;
+  document.getElementById('sel-name').textContent = lang.name;
+  document.getElementById('lang-indicator').textContent = lang.name;
+  document.getElementById('code-textarea').value = lang.sample;
+  syncLineNumbers();
+  clearOutput();
+
+  // Update dropdown selected state
+  document.querySelectorAll('.lang-dropdown-item').forEach(el => {
+    el.classList.remove('selected');
+  });
+  renderLangDropdown();
+
+  // Show/hide API notice
+  const notice = document.getElementById('api-notice');
+  if (!lang.canRunNative) {
+    notice.style.display = 'flex';
+    document.getElementById('api-notice-text').textContent =
+      `${lang.name} requires a backend compiler API for real execution. Mock output is shown below.`;
+  } else {
+    notice.style.display = 'none';
+  }
+}
+
+/* ================================================
+   OPEN SAMPLE (from lang card)
+================================================ */
+function openSample(id) {
+  const lang = LANGUAGES.find(l => l.id === id);
+  if (!lang) return;
+  setLanguage(lang);
+  document.getElementById('compiler').scrollIntoView({ behavior: 'smooth' });
+  showToast(`${lang.icon} ${lang.name} sample loaded`, 'success');
+}
+
+/* ================================================
+   LOAD SAMPLE (toolbar button)
+================================================ */
+function loadSample() {
+  document.getElementById('code-textarea').value = currentLang.sample;
+  syncLineNumbers();
+  showToast('Sample loaded', 'info');
+}
+
+/* ================================================
+   RESET
+================================================ */
+function resetEditor() {
+  document.getElementById('code-textarea').value = currentLang.sample;
+  document.getElementById('input-textarea').value = '';
+  clearOutput();
+  syncLineNumbers();
+  showToast('Editor reset', 'info');
+}
+
+/* ================================================
+   COPY CODE
+================================================ */
+function copyCode() {
+  const code = document.getElementById('code-textarea').value;
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('✓ Code copied to clipboard', 'success');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ Code copied', 'success');
+  });
+}
+
+/* ================================================
+   RUN CODE
+================================================ */
+async function runCode() {
+  const btn = document.getElementById('run-btn');
+  const output = document.getElementById('output-content');
+  const startTime = Date.now();
+
+  btn.disabled = true;
+  btn.classList.add('running');
+  btn.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+    </svg>
+    Running...`;
+
+  output.classList.remove('empty');
+  output.innerHTML = `<div class="output-line out-system output-typing">Executing ${currentLang.name} program...</div>`;
+
+  // Small delay for UX feel
+  await sleep(300 + Math.random() * 600);
+
+  if (currentLang.id === 'javascript') {
+    runJavaScript();
+  } else if (currentLang.id === 'html') {
+    runHTML();
+  } else {
+    runMocked();
+  }
+
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+  const timeEl = document.getElementById('exec-time');
+  timeEl.style.display = 'block';
+  timeEl.textContent = `${elapsed}s`;
+
+  btn.disabled = false;
+  btn.classList.remove('running');
+  btn.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+    Run Code`;
+}
+
+/* ================================================
+   RUN JAVASCRIPT (Native)
+================================================ */
+function runJavaScript() {
+  const code = document.getElementById('code-textarea').value;
+  const output = document.getElementById('output-content');
+  const lines = [];
+
+  // Override console
+  const origLog = console.log;
+  const origErr = console.error;
+  const origWarn = console.warn;
+  const origInfo = console.info;
+
+  console.log = (...args) => {
+    lines.push({ text: args.map(a => formatArg(a)).join(' '), cls: 'out-success' });
+    origLog.apply(console, args);
+  };
+  console.error = (...args) => {
+    lines.push({ text: '✗ ' + args.map(a => formatArg(a)).join(' '), cls: 'out-error' });
+    origErr.apply(console, args);
+  };
+  console.warn = (...args) => {
+    lines.push({ text: '⚠ ' + args.map(a => formatArg(a)).join(' '), cls: 'out-warn' });
+    origWarn.apply(console, args);
+  };
+  console.info = (...args) => {
+    lines.push({ text: 'ℹ ' + args.map(a => formatArg(a)).join(' '), cls: 'out-info' });
+    origInfo.apply(console, args);
+  };
+
+  let error = null;
+  try {
+    new Function(code)();
+  } catch(e) {
+    error = e;
+  }
+
+  console.log = origLog;
+  console.error = origErr;
+  console.warn = origWarn;
+  console.info = origInfo;
+
+  output.innerHTML = '';
+  if (lines.length === 0 && !error) {
+    lines.push({ text: '(No output)', cls: 'out-system' });
+  }
+  lines.forEach(l => {
+    const div = document.createElement('div');
+    div.className = `output-line ${l.cls}`;
+    div.textContent = l.text;
+    output.appendChild(div);
+  });
+  if (error) {
+    const div = document.createElement('div');
+    div.className = 'output-line out-error';
+    div.textContent = `✗ ${error.name}: ${error.message}`;
+    output.appendChild(div);
+  }
+  const sys = document.createElement('div');
+  sys.className = 'output-line out-system';
+  sys.textContent = 'JavaScript executed natively.';
+  output.appendChild(sys);
+}
+
+function formatArg(a) {
+  if (typeof a === 'object' && a !== null) {
+    try { return JSON.stringify(a, null, 2); } catch(e) { return String(a); }
+  }
+  return String(a);
+}
+
+/* ================================================
+   RUN HTML (Live iframe preview)
+================================================ */
+function runHTML() {
+  const code = document.getElementById('code-textarea').value;
+  const output = document.getElementById('output-content');
+  output.innerHTML = '';
+
+  // Create iframe
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = `
+    width: 100%; height: 300px; border: none; border-radius: 8px;
+    background: #fff; margin-top: 4px;
+  `;
+  output.appendChild(iframe);
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(code);
+  iframeDoc.close();
+
+  const info = document.createElement('div');
+  info.className = 'output-line out-system';
+  info.textContent = '▶ HTML/CSS/JS rendered live above';
+  output.appendChild(info);
+}
+
+/* ================================================
+   RUN MOCKED
+================================================ */
+async function runMocked() {
+  const output = document.getElementById('output-content');
+  const mockLines = MOCK_OUTPUTS[currentLang.id] || [
+    { text: `[Mock] ${currentLang.name} program executed.`, cls: 'out-success' },
+    { text: 'Process finished with exit code 0', cls: 'out-system' }
+  ];
+
+  output.innerHTML = '';
+
+  for (const line of mockLines) {
+    await sleep(60 + Math.random() * 80);
+    const div = document.createElement('div');
+    div.className = `output-line ${line.cls}`;
+    div.textContent = line.text;
+    output.appendChild(div);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  const note = document.createElement('div');
+  note.className = 'output-line out-info';
+  note.style.marginTop = '8px';
+  note.textContent = '⚡ Connect a backend API for real compilation.';
+  output.appendChild(note);
+}
+
+/* ================================================
+   UTILITY
+================================================ */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function clearOutput() {
+  const output = document.getElementById('output-content');
+  output.classList.add('empty');
+  output.innerHTML = `<div class="output-empty-msg"><span class="icon">▶</span>Run your code to see output here</div>`;
+  document.getElementById('exec-time').style.display = 'none';
+}
+
+function clearInput() {
+  document.getElementById('input-textarea').value = '';
+}
+
+/* ================================================
+   LINE NUMBERS
+================================================ */
+function syncLineNumbers() {
+  const ta = document.getElementById('code-textarea');
+  const ln = document.getElementById('line-numbers');
+  const lines = ta.value.split('\n').length;
+  ln.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('<br>');
+}
+
+function syncEditorScroll() {
+  const ta = document.getElementById('code-textarea');
+  const ln = document.getElementById('line-numbers');
+  ln.scrollTop = ta.scrollTop;
+}
+
+/* ================================================
+   THEME
+================================================ */
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-icon-dark').style.display = isDark ? 'none' : 'block';
+  document.getElementById('theme-icon-light').style.display = isDark ? 'block' : 'none';
+  showToast(isDark ? '☀️ Light mode' : '🌙 Dark mode', 'info');
+}
+
+/* ================================================
+   TOAST
+================================================ */
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add('show'));
+  });
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+/* ================================================
+   FAQ
+================================================ */
+function renderFAQ() {
+  const grid = document.getElementById('faq-grid');
+  grid.innerHTML = FAQ_DATA.map((item, i) => `
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFAQ(${i})">
+        ${item.q}
+        <span class="faq-chevron">▾</span>
+      </button>
+      <div class="faq-answer">${item.a}</div>
+    </div>
+  `).join('');
+}
+
+function toggleFAQ(i) {
+  const items = document.querySelectorAll('.faq-item');
+  items[i].classList.toggle('open');
+}
+
+/* ================================================
+   SCROLL REVEAL
+================================================ */
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, idx) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('revealed'), idx * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+/* ================================================
+   COUNTER ANIMATION
+================================================ */
+function initScrollCounter() {
+  const counters = document.querySelectorAll('[data-count]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(el => observer.observe(el));
+}
+
+function animateCounter(el) {
+  const target = parseInt(el.dataset.count);
+  const suffix = el.innerHTML.match(/<span>(.*?)<\/span>/)?.[1] || '';
+  let current = 0;
+  const step = Math.ceil(target / 40);
+  const interval = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.innerHTML = current + `<span>${suffix}</span>`;
+    if (current >= target) clearInterval(interval);
+  }, 30);
+}
+
+/* ================================================
+   HERO OUTPUT CYCLE
+================================================ */
+function initHeroOutputCycle() {
+  const lines = ['Hello, Python! 👋', 'Hello, Rust! 👋', 'Hello, Go! 👋', 'Hello, Java! 👋'];
+  let i = 0;
+  setInterval(() => {
+    i = (i + 1) % lines.length;
+    const el = document.getElementById('hero-output-text');
+    el.style.opacity = 0;
+    setTimeout(() => {
+      el.textContent = lines[i];
+      el.style.opacity = 1;
+      el.style.transition = 'opacity 0.4s ease';
+    }, 300);
+  }, 2000);
+}
+
+/* ================================================
+   MISC
+================================================ */
+function scrollToTop(e) {
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleMobileMenu() {
+  // Simple mobile nav toggle
+  const nav = document.querySelector('nav');
+  if (nav.style.display === 'flex') {
+    nav.style.display = '';
+    nav.style.position = '';
+  } else {
+    nav.style.display = 'flex';
+    nav.style.flexDirection = 'column';
+    nav.style.position = 'fixed';
+    nav.style.top = '64px';
+    nav.style.left = '0';
+    nav.style.right = '0';
+    nav.style.background = 'var(--bg-surface)';
+    nav.style.borderBottom = '1px solid var(--border)';
+    nav.style.padding = '12px 16px';
+    nav.style.zIndex = '999';
+  }
+}
+
+// Add spin keyframe
+const style = document.createElement('style');
+style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+document.head.appendChild(style);
+
+// Prevent tab from leaving editor
+document.getElementById('code-textarea').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+    this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = start + 2;
+    syncLineNumbers();
+  }
+});
+
+// Keyboard shortcut: Ctrl+Enter to run
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runCode();
+  }
+});
+
+/* ================================================
+   NOTE: API INTEGRATION PLACEHOLDER
+   To connect a real compiler backend:
+   1. Replace API_ENDPOINT with your backend URL
+      (e.g., Judge0, Piston, JDoodle, or custom)
+   2. Map language IDs to backend language codes
+   3. POST code + stdin, receive stdout/stderr
+   4. Display the real output in the output panel
+================================================ */
+const API_ENDPOINT = null; // Set to your compiler API URL
+
+async function callCompilerAPI(langId, code, stdin) {
+  if (!API_ENDPOINT) return null;
+  // Example Judge0 integration:
+  // POST to ${API_ENDPOINT}/submissions with { source_code, language_id, stdin }
+  // Then GET ${API_ENDPOINT}/submissions/{token}?fields=stdout,stderr
+  return null;
+}
+</script>
+</body>
+</html>
